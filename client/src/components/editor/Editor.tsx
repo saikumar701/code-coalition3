@@ -33,6 +33,7 @@ function Editor() {
     )
     const [extensions, setExtensions] = useState<Extension[]>([])
     const editorRef = useRef<any>(null)
+    const [editorView, setEditorView] = useState<EditorView | null>(null)
     const [lastCursorPosition, setLastCursorPosition] = useState<number>(0)
     const [lastSelection, setLastSelection] = useState<{start?: number, end?: number}>({})
     const cursorMoveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
@@ -127,18 +128,20 @@ function Editor() {
         setExtensions(extensions)
     }, [filteredUsers, language, handleSelectionChange])
 
-    // Update remote users when filteredUsers changes
+    // Update remote users when filteredUsers changes and once the view is ready
     useEffect(() => {
-        if (editorRef.current?.view) {
-            editorRef.current.view.dispatch({
+        const view = editorView ?? editorRef.current?.view
+        if (view) {
+            view.dispatch({
                 effects: updateRemoteUsers.of(filteredUsers)
             })
         }
-    }, [filteredUsers])
+    }, [filteredUsers, editorView])
 
     return (
         <CodeMirror
             ref={editorRef}
+            onCreateEditor={setEditorView}
             theme={editorThemes[theme]}
             onChange={onCodeChange}
             value={activeFile?.content}
